@@ -487,6 +487,127 @@ pytest
 5. 定期备份数据库
 6. 监控日志和性能
 
+## Docker 部署
+
+### 构建 Docker 镜像
+
+```bash
+# 构建镜像
+docker build -t curiocloud-backend:latest .
+
+# 查看构建的镜像
+docker images | grep curiocloud-backend
+```
+
+### 本地运行容器
+
+```bash
+docker run -d \
+  --name curiocloud-backend \
+  --restart always \
+  -p 8000:8000 \
+  -e DATABASE_HOST=<your-db-host> \
+  -e DATABASE_USER=<your-db-user> \
+  -e DATABASE_PASSWORD=<your-db-password> \
+  -e DATABASE_NAME=<your-db-name> \
+  -e JWT_SECRET_KEY=<your-jwt-secret> \
+  -e JWT_ALGORITHM=HS256 \
+  -e JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30 \
+  -e openrouter_api_key=<your-openrouter-key> \
+  -e openrouter_base_url=https://openrouter.ai/api/v1 \
+  -e openrouter_default_model=google/gemini-2.5-flash \
+  curiocloud-backend:latest
+```
+
+### 使用 Docker Compose（推荐）
+
+创建 `docker-compose.yml` 文件：
+
+```yaml
+version: '3.8'
+
+services:
+  backend:
+    image: curiocloud-backend:latest
+    container_name: curiocloud-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ALGORITHM: HS256
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      openrouter_api_key: ${openrouter_api_key}
+      openrouter_base_url: https://openrouter.ai/api/v1
+      openrouter_default_model: google/gemini-2.5-flash
+```
+
+运行：
+```bash
+# 启动服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+### 推送到私有 Docker Registry
+
+```bash
+# 登录到私有Registry
+docker login <REGISTRY_URL> -u <USERNAME>
+
+# 打标签
+docker tag curiocloud-backend:latest <REGISTRY_URL>/curiocloud-backend:latest
+
+# 推送镜像
+docker push <REGISTRY_URL>/curiocloud-backend:latest
+```
+
+### GitHub Actions 自动化部署
+
+本项目配置了 GitHub Actions 自动化流程，可以自动构建镜像并部署到远程服务器。
+
+#### 配置步骤
+
+1. 在 GitHub 仓库的 **Settings → Secrets and variables → Actions** 中配置以下 secrets：
+
+**Docker Registry 相关：**
+- `REGISTRY_URL` - 私有Registry地址（如 `registry.example.com`）
+- `REGISTRY_USERNAME` - Registry登录用户名
+- `REGISTRY_PASSWORD` - Registry登录密码
+
+**远程服务器部署相关：**
+- `REMOTE_HOST` - 部署服务器的IP或域名
+- `REMOTE_USER` - SSH登录用户
+- `REMOTE_SSH_KEY` - SSH私钥内容
+- `REMOTE_PORT` - SSH端口
+- `DOCKER_CONTAINER_NAME` - 容器名称（如 `curiocloud-backend`）
+
+1. 推送代码到 `main` 分支即可自动触发构建和部署
+
+2. 也可以在 GitHub Actions 页面手动触发 workflow
+
+#### 部署流程
+
+1. **构建阶段**：
+   - 检出代码
+   - 登录私有Docker Registry
+   - 构建并推送多标签镜像（`latest`、分支名、commit hash）
+
+2. **部署阶段**（仅main分支）：
+   - SSH连接到远程服务器
+   - 拉取最新镜像
+   - 停止并删除旧容器
+   - 启动新容器
+
 ## 故障排除
 
 ### 常见问题
@@ -495,6 +616,7 @@ pytest
    - 检查MySQL服务是否运行
    - 验证.env文件中的数据库配置
    - 确保数据库存在
+   - Docker环境：确保容器能访问数据库（使用宿主机IP或容器网络）
 
 2. **JWT令牌错误**
    - 检查JWT_SECRET_KEY配置
@@ -503,4 +625,15 @@ pytest
 3. **依赖安装失败**
    - 使用虚拟环境
    - 更新pip版本
+
+4. **Docker容器无法启动**
+   - 检查端口8000是否被占用：`netstat -ano | findstr :8000`（Windows）或 `lsof -i :8000`（Linux/Mac）
+   - 查看容器日志：`docker logs curiocloud-backend`
+   - 验证所有环境变量是否正确配置
+
+5. **GitHub Actions部署失败**
+   - 检查所有Secrets是否正确配置
+   - 验证SSH连接是否正常
+   - 查看Actions日志定位具体错误
+   - 确保远程服务器Docker服务正常运行
 
