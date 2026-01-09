@@ -1,36 +1,50 @@
-# Use a slim Python base
-FROM python:3.14-slim
+# Stage 1: Builder
+FROM python:3.14-slim AS builder
 
-# Prevent Python from writing pyc files and buffer stdout/stderr
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# Install build deps needed for some packages (cryptography, wheel builds, etc.)
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-       build-essential \
-       gcc \
-       libssl-dev \
-       libffi-dev \
-       git \
-       ca-certificates \
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    libssl-dev \
+    libffi-dev \
+    git \
     && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY requirements.txt .
+
+# Install dependencies into virtual environment
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt && \
+    # Cleanup to reduce size: strip binaries and remove build tools
+    find /opt/venv -name "*.so" -exec strip --strip-debug {} \; && \
+    pip uninstall -y pip setuptools wheel
+
+# Stage 2: Final
+FROM python:3.14-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
-# Copy requirements first to leverage Docker layer caching
-# Ensure you have a requirements.txt in project root listing FastAPI, uvicorn, sqlalchemy, python-jose[cryptography], passlib[bcrypt], pymysql, alembic, etc.
-COPY requirements.txt /app/requirements.txt
+# Create a non-root user first
+RUN groupadd -g 1000 app && useradd -m -u 1000 -g app app
 
-RUN pip install --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir -r /app/requirements.txt
+# Copy virtual environment from builder with correct ownership
+COPY --from=builder --chown=app:app /opt/venv /opt/venv
 
-# Copy application code
-COPY . /app
-
-# Create a non-root user and fix permissions
-RUN groupadd -g 1000 app && useradd -m -u 1000 -g app app \
-    && chown -R app:app /app
+# Copy application code with correct ownership
+COPY --chown=app:app . /app
 
 USER app
 

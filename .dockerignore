@@ -1,6 +1,35 @@
-*.md
-!README.md
+# Git
+.git
+.gitignore
+.github/
 
-*/temp*
+# Python/Environment
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
 
-**/.git
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+test.db
+tests/
+docs/
+research_reports/
+.env
+.env.example
+sync_users_to_landppt_final.py
+scripts/
+
+# Docker build artifacts
+Dockerfile
