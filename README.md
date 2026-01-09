@@ -27,7 +27,7 @@
 
 - **框架**: FastAPI 0.104.1
 - **数据库**: MySQL + SQLAlchemy
-- **认证**: JWT + Passlib (bcrypt)
+- **认证**: JWT + bcrypt
 - **数据验证**: Pydantic
 - **服务器**: Uvicorn
 

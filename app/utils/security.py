@@ -3,13 +3,9 @@
 
 提供密码哈希和验证功能
 """
-from passlib.context import CryptContext
-from passlib.hash import bcrypt
+import bcrypt
 import hashlib
 import base64
-
-# 创建密码上下文
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def _pre_hash_password(password: str) -> str:
@@ -31,7 +27,9 @@ def hash_password(password: str) -> str:
     Returns:
         哈希后的密码
     """
-    return pwd_context.hash(_pre_hash_password(password))
+    pwd_bytes = _pre_hash_password(password).encode('utf-8')
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pwd_bytes, salt).decode('utf-8')
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -45,4 +43,6 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         密码是否匹配
     """
-    return pwd_context.verify(_pre_hash_password(plain_password), hashed_password)
+    pwd_bytes = _pre_hash_password(plain_password).encode('utf-8')
+    hash_bytes = hashed_password.encode('utf-8')
+    return bcrypt.checkpw(pwd_bytes, hash_bytes)

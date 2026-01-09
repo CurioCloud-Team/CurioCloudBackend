@@ -27,7 +27,7 @@ CurioCloud Backend 用户认证模块提供完整的用户注册、登录和资�
 - **框架**: FastAPI 0.110.0
 - **数据库**: MySQL + SQLAlchemy ORM
 - **认证**: JWT + python-jose
-- **密码加密**: bcrypt + passlib
+- **密码加密**: bcrypt
 - **数据验证**: Pydantic
 - **测试框架**: pytest
 
