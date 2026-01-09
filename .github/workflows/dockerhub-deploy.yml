@@ -87,7 +87,7 @@ jobs:
           key: ${{ secrets.REMOTE_SSH_KEY }}
           port: ${{ secrets.REMOTE_PORT }}
           script: |
-            docker login ${REGISTRY_URL} -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
+            docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
             docker pull ${IMAGE_REPO}:${IMAGE_TAG}
             docker ps -q --filter "name=${{ secrets.DOCKER_CONTAINER_NAME }}" | grep -q "." && docker stop ${{ secrets.DOCKER_CONTAINER_NAME }} || true
             docker rm ${{ secrets.DOCKER_CONTAINER_NAME }} 2>/dev/null || true
