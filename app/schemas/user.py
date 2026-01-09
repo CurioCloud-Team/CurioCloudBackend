@@ -3,7 +3,7 @@
 
 使用Pydantic定义请求和响应的数据格式
 """
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, ValidationInfo
 from datetime import datetime
 from typing import Optional
 import re
@@ -15,7 +15,8 @@ class UserBase(BaseModel):
     email: EmailStr = Field(..., description="邮箱地址")
     full_name: Optional[str] = Field(None, max_length=100, description="用户全名")
     
-    @validator('username')
+    @field_validator('username')
+    @classmethod
     def validate_username(cls, v):
         """验证用户名格式"""
         if not re.match(r'^[a-zA-Z0-9_-]+$', v):
@@ -28,7 +29,8 @@ class UserCreate(UserBase):
     password: str = Field(..., min_length=8, max_length=100, description="密码")
     confirm_password: str = Field(..., description="确认密码")
     
-    @validator('password')
+    @field_validator('password')
+    @classmethod
     def validate_password(cls, v):
         """验证密码强度"""
         if not re.search(r'[A-Za-z]', v):
@@ -37,10 +39,11 @@ class UserCreate(UserBase):
             raise ValueError('密码必须包含至少一个数字')
         return v
     
-    @validator('confirm_password')
-    def validate_passwords_match(cls, v, values):
+    @field_validator('confirm_password')
+    @classmethod
+    def validate_passwords_match(cls, v, info: ValidationInfo):
         """验证密码确认"""
-        if 'password' in values and v != values['password']:
+        if 'password' in info.data and v != info.data['password']:
             raise ValueError('两次输入的密码不一致')
         return v
 
@@ -106,14 +109,16 @@ class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = Field(None, max_length=100, description="用户全名")
     email: Optional[EmailStr] = Field(None, description="邮箱地址")
     
-    @validator('email')
+    @field_validator('email')
+    @classmethod
     def validate_email_if_provided(cls, v):
         """如果提供了邮箱，验证邮箱格式"""
         if v is not None and v.strip() == "":
             raise ValueError('邮箱不能为空字符串')
         return v
     
-    @validator('full_name')
+    @field_validator('full_name')
+    @classmethod
     def validate_full_name_if_provided(cls, v):
         """如果提供了全名，验证全名格式"""
         if v is not None and v.strip() == "":

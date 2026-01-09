@@ -5,9 +5,20 @@
 """
 from passlib.context import CryptContext
 from passlib.hash import bcrypt
+import hashlib
+import base64
 
 # 创建密码上下文
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def _pre_hash_password(password: str) -> str:
+    """
+    预处理密码：先使用 SHA256 哈希，再进行 Base64 编码。
+    这解决了 bcrypt 的 72 字节限制问题，并防止 NULL 字节截断。
+    """
+    sha256_hash = hashlib.sha256(password.encode('utf-8')).digest()
+    return base64.b64encode(sha256_hash).decode('utf-8')
 
 
 def hash_password(password: str) -> str:
@@ -20,7 +31,7 @@ def hash_password(password: str) -> str:
     Returns:
         哈希后的密码
     """
-    return pwd_context.hash(password)
+    return pwd_context.hash(_pre_hash_password(password))
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -34,4 +45,4 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         密码是否匹配
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(_pre_hash_password(plain_password), hashed_password)
