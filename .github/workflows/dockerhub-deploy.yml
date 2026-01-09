@@ -86,10 +86,9 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.REMOTE_SSH_KEY }}
           port: ${{ secrets.REMOTE_PORT }}
-          envs: IMAGE_TAG,IMAGE_REPO
           script: |
             docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
-            docker pull ${IMAGE_REPO}:${IMAGE_TAG}
+            docker pull ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
             docker ps -q --filter "name=${{ secrets.DOCKER_CONTAINER_NAME }}" | grep -q "." && docker stop ${{ secrets.DOCKER_CONTAINER_NAME }} || true
             docker rm ${{ secrets.DOCKER_CONTAINER_NAME }} 2>/dev/null || true
-            docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} --restart always -p 8000:8000 ${IMAGE_REPO}:${IMAGE_TAG}
+            docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} --restart always -p 8000:8000 ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
