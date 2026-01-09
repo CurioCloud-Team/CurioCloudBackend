@@ -90,4 +90,4 @@ jobs:
             docker pull ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
             docker ps -q --filter "name=${{ secrets.DOCKER_CONTAINER_NAME }}" | grep -q "." && docker stop ${{ secrets.DOCKER_CONTAINER_NAME }} || true
             docker rm ${{ secrets.DOCKER_CONTAINER_NAME }} 2>/dev/null || true
-            docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} --restart always -p 8000:8000 ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} --restart always --env-file ${{ secrets.ENV_FILE_PATH }} -p 8000:8000 ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
