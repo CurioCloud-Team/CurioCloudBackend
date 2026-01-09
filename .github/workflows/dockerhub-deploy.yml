@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: curiocloud-backend
+  IMAGE_NAME: awords/curiocloud-backend
 
 jobs:
   build-and-push:
