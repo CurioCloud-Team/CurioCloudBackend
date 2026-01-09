@@ -1,12 +1,23 @@
+# Core App & Server
 fastapi
 uvicorn
+python-multipart
+email-validator
+pydantic-settings
+httptools
+
+# Database
 sqlalchemy
-pydantic_settings
-jose
+pymysql
+
+# Authentication & Security
+python-jose[cryptography]
+passlib[bcrypt]
+
+# Utilities & Data
 httpx
 pandas
 dirtyjson
-passlib
+
+# Testing
 pytest
-pymysql
-email-validator
