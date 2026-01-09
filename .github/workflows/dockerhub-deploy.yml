@@ -77,7 +77,6 @@ jobs:
     if: github.ref == 'refs/heads/main'
     env:
       IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
-      IMAGE_REPO: ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -88,7 +87,7 @@ jobs:
           port: ${{ secrets.REMOTE_PORT }}
           script: |
             docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
-            docker pull ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
+            docker pull ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
             docker ps -q --filter "name=${{ secrets.DOCKER_CONTAINER_NAME }}" | grep -q "." && docker stop ${{ secrets.DOCKER_CONTAINER_NAME }} || true
             docker rm ${{ secrets.DOCKER_CONTAINER_NAME }} 2>/dev/null || true
-            docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} --restart always -p 8000:8000 ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
+            docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} --restart always -p 8000:8000 ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
