@@ -33,6 +33,7 @@
 
 ## 项目结构
 
+```
 ├── app/                    # 应用程序包
 │   ├── core/              # 核心配置
 │   │   ├── config.py      # 应用配置
@@ -69,6 +70,7 @@
 ├── requirements.txt       # 依赖包
 ├── demo_teaching_module.py # 教学模块演示
 └── .env                   # 环境变量
+```
 
 ## 快速开始
 
